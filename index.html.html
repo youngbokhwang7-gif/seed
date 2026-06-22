@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="단열재 영업">
+<meta name="theme-color" content="#0a0e1a">
+<title>단열재 영업 트래커</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+:root{
+  --bg:#0a0e1a; --surface:#141b2e; --surface2:#1c2640;
+  --line:#26304d; --txt:#eef2fb; --txt2:#8a96b4; --txt3:#5a6585;
+  --fire:#ff6b35; --fire2:#ff9a56; --go:#2dd4a7; --gold:#ffc94d;
+  --call:#4a9eff; --visit:#a78bfa; --quote:#2dd4a7; --msg:#ffc94d; --sample:#ff7a9c;
+  --shadow:0 8px 32px rgba(0,0,0,.45);
+}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Malgun Gothic",sans-serif;
+  background:var(--bg);color:var(--txt);
+  min-height:100vh;min-height:100dvh;
+  padding-bottom:84px;
+  overflow-x:hidden;
+  -webkit-user-select:none;user-select:none;
+}
+.wrap{max-width:520px;margin:0 auto;padding:0 16px;}
+
+/* ===== HEADER ===== */
+.hd{padding:18px 16px 10px;max-width:520px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;}
+.hd h1{font-size:19px;font-weight:800;letter-spacing:-.4px;}
+.hd .date{font-size:13px;color:var(--txt2);font-weight:600;}
+.streak-pill{display:flex;align-items:center;gap:5px;background:linear-gradient(135deg,#3a1f0a,#4a2510);
+  border:1px solid #6b3410;padding:6px 11px;border-radius:20px;font-size:13px;font-weight:800;color:var(--fire2);}
+
+/* ===== SECTION ===== */
+.sec-title{font-size:13px;font-weight:700;color:var(--txt3);letter-spacing:.5px;
+  text-transform:uppercase;margin:22px 4px 11px;}
+
+/* ===== ACTION COUNTERS (MAIN) ===== */
+.counters{display:grid;grid-template-columns:repeat(2,1fr);gap:11px;}
+.cbtn{
+  position:relative;background:var(--surface);border:1px solid var(--line);
+  border-radius:18px;padding:16px 14px 14px;text-align:left;cursor:pointer;
+  transition:transform .08s,box-shadow .2s;overflow:hidden;
+}
+.cbtn:active{transform:scale(.96);}
+.cbtn .ic{font-size:26px;display:block;margin-bottom:8px;}
+.cbtn .lbl{font-size:14px;font-weight:700;color:var(--txt2);}
+.cbtn .cnt{font-size:34px;font-weight:900;letter-spacing:-1px;margin-top:2px;line-height:1;}
+.cbtn .bar{position:absolute;left:0;bottom:0;height:4px;border-radius:0 2px 0 0;transition:width .4s;}
+.cbtn .goal{font-size:11px;color:var(--txt3);font-weight:600;margin-top:7px;}
+.cbtn[data-k="call"]{box-shadow:inset 0 0 0 1px transparent;}
+.cbtn .plus{position:absolute;top:13px;right:13px;width:26px;height:26px;border-radius:50%;
+  background:var(--surface2);display:flex;align-items:center;justify-content:center;
+  font-size:18px;font-weight:700;color:var(--txt2);}
+.cbtn .minus{position:absolute;bottom:13px;right:13px;width:24px;height:24px;border-radius:50%;
+  background:transparent;border:1px solid var(--line);display:flex;align-items:center;
+  justify-content:center;font-size:16px;color:var(--txt3);cursor:pointer;}
+
+/* ===== DAILY GAUGE ===== */
+.daycard{background:var(--surface);border:1px solid var(--line);border-radius:18px;
+  padding:18px;display:flex;align-items:center;gap:18px;}
+.ring{position:relative;width:96px;height:96px;flex-shrink:0;}
+.ring svg{transform:rotate(-90deg);}
+.ring .pct{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.ring .pct b{font-size:24px;font-weight:900;letter-spacing:-1px;}
+.ring .pct span{font-size:10px;color:var(--txt3);font-weight:700;}
+.daystat{flex:1;}
+.daystat .row{display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;}
+.daystat .row .k{font-size:13px;color:var(--txt2);font-weight:600;}
+.daystat .row .v{font-size:15px;font-weight:800;}
+.daystat .row .v small{font-size:11px;color:var(--txt3);font-weight:600;}
+
+/* ===== MONTH PROGRESS ===== */
+.mbar-card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:18px;margin-bottom:11px;}
+.mbar-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:11px;}
+.mbar-head .t{font-size:14px;font-weight:700;color:var(--txt2);}
+.mbar-head .n{font-size:16px;font-weight:900;}
+.mbar-head .n small{font-size:12px;color:var(--txt3);font-weight:700;}
+.track{height:11px;background:var(--surface2);border-radius:6px;overflow:hidden;}
+.fill{height:100%;border-radius:6px;transition:width .5s cubic-bezier(.4,0,.2,1);}
+.mbar-foot{display:flex;justify-content:space-between;margin-top:9px;font-size:11.5px;color:var(--txt3);font-weight:600;}
+.mbar-foot .pace{color:var(--fire2);font-weight:800;}
+
+/* ===== STAT GRID ===== */
+.statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:13px 11px;text-align:center;}
+.stat .v{font-size:21px;font-weight:900;letter-spacing:-.5px;}
+.stat .v.up{color:var(--go);} .stat .v.dn{color:var(--fire);}
+.stat .l{font-size:11px;color:var(--txt3);font-weight:600;margin-top:3px;line-height:1.3;}
+
+/* ===== TABS / NAV ===== */
+.nav{position:fixed;bottom:0;left:0;right:0;background:rgba(10,14,26,.92);
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  border-top:1px solid var(--line);display:flex;padding:8px 0 calc(8px + env(safe-area-inset-bottom));z-index:50;}
+.nav .wrapn{max-width:520px;margin:0 auto;width:100%;display:flex;}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:6px 0;cursor:pointer;color:var(--txt3);}
+.tab.on{color:var(--fire2);}
+.tab .ti{font-size:21px;}
+.tab .tl{font-size:10.5px;font-weight:700;}
+
+.page{display:none;animation:fade .25s;}
+.page.on{display:block;}
+@keyframes fade{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:none;}}
+
+/* ===== PIPELINE ===== */
+.pipe-stage{margin-bottom:18px;}
+.pipe-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;padding:0 2px;}
+.pipe-head .sn{font-size:14px;font-weight:800;display:flex;align-items:center;gap:7px;}
+.pipe-head .dot{width:9px;height:9px;border-radius:50%;}
+.pipe-head .sum{font-size:12px;color:var(--txt2);font-weight:700;}
+.lead{background:var(--surface);border:1px solid var(--line);border-radius:13px;
+  padding:13px;margin-bottom:8px;cursor:pointer;transition:transform .08s;}
+.lead:active{transform:scale(.98);}
+.lead .ln{font-size:15px;font-weight:800;display:flex;justify-content:space-between;align-items:center;}
+.lead .lp{font-size:13px;color:var(--go);font-weight:800;}
+.lead .lm{font-size:12px;color:var(--txt2);margin-top:5px;line-height:1.4;}
+.lead .lfollow{font-size:11px;color:var(--gold);font-weight:700;margin-top:6px;display:flex;align-items:center;gap:4px;}
+.lead .lfollow.due{color:var(--fire);}
+.lead .prod-tag{display:inline-block;font-size:10px;background:var(--surface2);color:var(--txt2);
+  padding:2px 7px;border-radius:5px;font-weight:700;margin-top:6px;margin-right:4px;}
+
+/* ===== FORM / MODAL ===== */
+.fab{position:fixed;right:18px;bottom:84px;width:56px;height:56px;border-radius:50%;
+  background:linear-gradient(135deg,var(--fire),var(--fire2));border:none;color:#fff;
+  font-size:30px;font-weight:300;box-shadow:0 6px 24px rgba(255,107,53,.5);cursor:pointer;z-index:40;
+  display:flex;align-items:center;justify-content:center;}
+.fab:active{transform:scale(.92);}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);
+  z-index:100;display:none;align-items:flex-end;}
+.modal.on{display:flex;animation:fade .2s;}
+.sheet{background:var(--surface);width:100%;max-width:520px;margin:0 auto;
+  border-radius:22px 22px 0 0;padding:22px 18px calc(22px + env(safe-area-inset-bottom));
+  max-height:90vh;overflow-y:auto;animation:up .28s cubic-bezier(.2,.8,.2,1);}
+@keyframes up{from{transform:translateY(100%);}to{transform:none;}}
+.sheet h2{font-size:18px;font-weight:800;margin-bottom:16px;}
+.field{margin-bottom:14px;}
+.field label{display:block;font-size:12px;color:var(--txt2);font-weight:700;margin-bottom:6px;}
+.field input,.field select,.field textarea{width:100%;background:var(--surface2);
+  border:1px solid var(--line);border-radius:11px;padding:13px;color:var(--txt);
+  font-size:15px;font-family:inherit;-webkit-user-select:text;user-select:text;}
+.field textarea{resize:none;min-height:64px;}
+.chips{display:flex;flex-wrap:wrap;gap:7px;}
+.chip{padding:8px 13px;border-radius:10px;background:var(--surface2);border:1px solid var(--line);
+  font-size:13px;font-weight:700;color:var(--txt2);cursor:pointer;}
+.chip.on{background:var(--fire);border-color:var(--fire);color:#fff;}
+.chip.stage.on{background:var(--call);border-color:var(--call);}
+.btn-row{display:flex;gap:10px;margin-top:6px;}
+.btn{flex:1;padding:15px;border-radius:13px;border:none;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;}
+.btn.primary{background:linear-gradient(135deg,var(--fire),var(--fire2));color:#fff;}
+.btn.ghost{background:var(--surface2);color:var(--txt2);}
+.btn.danger{background:transparent;border:1px solid #5a2030;color:#ff6b7a;}
+
+/* ===== SETTINGS / GOALS ===== */
+.gcard{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:12px;}
+.gcard h3{font-size:14px;font-weight:800;margin-bottom:13px;}
+.grow{display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);}
+.grow:last-child{border:none;}
+.grow .gl{font-size:14px;font-weight:600;color:var(--txt2);}
+.grow input{width:92px;text-align:right;background:var(--surface2);border:1px solid var(--line);
+  border-radius:9px;padding:9px;color:var(--txt);font-size:15px;font-weight:700;-webkit-user-select:text;user-select:text;}
+
+/* ===== INSIGHT ===== */
+.insight{background:linear-gradient(135deg,#1a2540,#141b2e);border:1px solid var(--line);
+  border-radius:16px;padding:16px;margin-bottom:11px;display:flex;gap:13px;align-items:flex-start;}
+.insight .em{font-size:24px;flex-shrink:0;}
+.insight .it{font-size:14px;line-height:1.5;font-weight:600;}
+.insight .it b{color:var(--fire2);font-weight:900;}
+
+.empty{text-align:center;padding:40px 20px;color:var(--txt3);}
+.empty .e{font-size:40px;margin-bottom:12px;}
+.empty p{font-size:14px;line-height:1.5;}
+
+.toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(20px);
+  background:var(--surface2);border:1px solid var(--line);padding:11px 20px;border-radius:30px;
+  font-size:14px;font-weight:700;opacity:0;transition:all .3s;z-index:200;pointer-events:none;box-shadow:var(--shadow);}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<div class="hd">
+  <div>
+    <h1>오늘의 영업</h1>
+    <div class="date" id="todayLbl"></div>
+  </div>
+  <div class="streak-pill">🔥 <span id="streakNum">0</span>일</div>
+</div>
+
+<!-- ===================== 홈 ===================== -->
+<div class="page on" id="page-home">
+  <div class="wrap">
+
+    <div class="sec-title">오늘 활동 · 탭하면 +1</div>
+    <div class="counters" id="counters"></div>
+
+    <div class="sec-title">오늘 목표 달성</div>
+    <div class="daycard">
+      <div class="ring">
+        <svg width="96" height="96">
+          <circle cx="48" cy="48" r="42" fill="none" stroke="var(--surface2)" stroke-width="9"/>
+          <circle id="dayRing" cx="48" cy="48" r="42" fill="none" stroke="var(--fire)" stroke-width="9"
+            stroke-linecap="round" stroke-dasharray="264" stroke-dashoffset="264"/>
+        </svg>
+        <div class="pct"><b id="dayPct">0%</b><span>달성률</span></div>
+      </div>
+      <div class="daystat" id="dayStat"></div>
+    </div>
+
+    <div class="sec-title">이번 달 진행률</div>
+    <div id="monthBars"></div>
+
+    <div class="sec-title">동기부여 지표</div>
+    <div class="statgrid" id="motivGrid"></div>
+
+    <div class="sec-title">코치</div>
+    <div id="insightBox"></div>
+
+  </div>
+</div>
+
+<!-- ===================== 파이프라인 ===================== -->
+<div class="page" id="page-pipe">
+  <div class="wrap">
+    <div class="sec-title">예상 매출 파이프라인</div>
+    <div class="statgrid" style="margin-bottom:6px">
+      <div class="stat"><div class="v" id="pipeTotal">0</div><div class="l">전체 예상(만원)</div></div>
+      <div class="stat"><div class="v up" id="pipeWon">0</div><div class="l">계약 완료(만원)</div></div>
+      <div class="stat"><div class="v" id="pipeCount">0</div><div class="l">진행중 건수</div></div>
+    </div>
+    <div id="pipeBody"></div>
+  </div>
+</div>
+
+<!-- ===================== 통계 ===================== -->
+<div class="page" id="page-stat">
+  <div class="wrap">
+    <div class="sec-title">전환율 · 효율</div>
+    <div class="statgrid" id="convGrid"></div>
+    <div class="sec-title">이번 달 vs 지난 달</div>
+    <div id="compareBox"></div>
+    <div class="sec-title">최근 7일 활동</div>
+    <div class="gcard"><div id="weekChart"></div></div>
+  </div>
+</div>
+
+<!-- ===================== 설정 ===================== -->
+<div class="page" id="page-set">
+  <div class="wrap">
+    <div class="sec-title">일일 목표</div>
+    <div class="gcard">
+      <h3>하루 활동 목표</h3>
+      <div id="dayGoalForm"></div>
+    </div>
+    <div class="sec-title">월간 목표</div>
+    <div class="gcard">
+      <h3>이번 달 목표</h3>
+      <div class="grow"><span class="gl">매출 (만원)</span><input type="number" id="mg_rev" inputmode="numeric"></div>
+      <div class="grow"><span class="gl">신규 거래처 (곳)</span><input type="number" id="mg_new" inputmode="numeric"></div>
+      <div class="grow"><span class="gl">계약 건수</span><input type="number" id="mg_deal" inputmode="numeric"></div>
+    </div>
+    <button class="btn primary" style="width:100%" onclick="saveGoals()">목표 저장</button>
+    <div class="sec-title">데이터</div>
+    <div class="gcard">
+      <div class="btn-row">
+        <button class="btn ghost" onclick="exportData()">백업 내보내기</button>
+        <button class="btn ghost" onclick="document.getElementById('importFile').click()">불러오기</button>
+      </div>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+      <button class="btn danger" style="width:100%;margin-top:10px" onclick="resetToday()">오늘 활동 초기화</button>
+    </div>
+  </div>
+</div>
+
+<button class="fab" id="fab" onclick="openLead()">+</button>
+
+<!-- 거래처 모달 -->
+<div class="modal" id="leadModal">
+  <div class="sheet">
+    <h2 id="leadTitle">거래처 추가</h2>
+    <div class="field"><label>거래처 / 현장명</label><input type="text" id="l_name" placeholder="예: ○○건설 와동현장"></div>
+    <div class="field"><label>예상 금액 (만원)</label><input type="number" id="l_price" inputmode="numeric" placeholder="0"></div>
+    <div class="field"><label>단계</label><div class="chips" id="stageChips"></div></div>
+    <div class="field"><label>제품</label><div class="chips" id="prodChips"></div></div>
+    <div class="field"><label>다음 연락일</label><input type="date" id="l_follow"></div>
+    <div class="field"><label>메모</label><textarea id="l_memo" placeholder="현장 위치, 필요 물량, 통화 내용..."></textarea></div>
+    <div class="btn-row">
+      <button class="btn ghost" onclick="closeLead()">취소</button>
+      <button class="btn primary" onclick="saveLead()">저장</button>
+    </div>
+    <button class="btn danger" id="delLeadBtn" style="width:100%;margin-top:10px;display:none" onclick="deleteLead()">삭제</button>
+  </div>
+</div>
+
+<div class="nav"><div class="wrapn">
+  <div class="tab on" data-p="home"><div class="ti">🎯</div><div class="tl">오늘</div></div>
+  <div class="tab" data-p="pipe"><div class="ti">📊</div><div class="tl">파이프라인</div></div>
+  <div class="tab" data-p="stat"><div class="ti">📈</div><div class="tl">통계</div></div>
+  <div class="tab" data-p="set"><div class="ti">⚙️</div><div class="tl">설정</div></div>
+</div></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============ 데이터 정의 ============ */
+const ACTIONS=[
+  {k:'call',  ic:'☎️',lbl:'전화',   color:'var(--call)', dg:20},
+  {k:'visit', ic:'🚗',lbl:'방문',   color:'var(--visit)',dg:5},
+  {k:'quote', ic:'📋',lbl:'견적발송',color:'var(--quote)',dg:3},
+  {k:'msg',   ic:'💬',lbl:'카톡/문자',color:'var(--msg)',  dg:15},
+  {k:'sample',ic:'📦',lbl:'샘플발송',color:'var(--sample)',dg:1},
+];
+const STAGES=[
+  {k:'lead',  n:'잠재고객',c:'#5a6585'},
+  {k:'quote', n:'견적중',  c:'#4a9eff'},
+  {k:'nego',  n:'협상중',  c:'#ffc94d'},
+  {k:'won',   n:'계약완료',c:'#2dd4a7'},
+  {k:'lost',  n:'실패',    c:'#ff6b7a'},
+];
+const PRODUCTS=['PF보드','EPS','XPS','층간차음재','기타'];
+
+/* ============ 저장소 ============ */
+const todayKey=()=>new Date().toLocaleDateString('sv');
+const monthKey=()=>todayKey().slice(0,7);
+let DB=JSON.parse(localStorage.getItem('insul_sales')||'null')||{
+  acts:{}, leads:[], dayGoals:{}, monthGoals:{rev:5000,new:10,deal:8}, streak:0, lastDay:'',
+};
+ACTIONS.forEach(a=>{if(DB.dayGoals[a.k]==null)DB.dayGoals[a.k]=a.dg;});
+function save(){localStorage.setItem('insul_sales',JSON.stringify(DB));}
+function getDay(d){return DB.acts[d]||(DB.acts[d]={call:0,visit:0,quote:0,msg:0,sample:0,rev:0});}
+
+/* ============ 활동 카운터 ============ */
+function bump(k,n){
+  const d=getDay(todayKey()); d[k]=Math.max(0,(d[k]||0)+n);
+  if(k==='quote'&&n>0){} save(); render(); if(n>0)haptic();
+}
+function haptic(){if(navigator.vibrate)navigator.vibrate(8);}
+
+function renderCounters(){
+  const d=getDay(todayKey());
+  document.getElementById('counters').innerHTML=ACTIONS.map(a=>{
+    const v=d[a.k]||0, g=DB.dayGoals[a.k]||1, pct=Math.min(100,v/g*100);
+    return `<div class="cbtn" data-k="${a.k}" onclick="bump('${a.k}',1)">
+      <span class="ic">${a.ic}</span>
+      <div class="lbl">${a.lbl}</div>
+      <div class="cnt" style="color:${a.color}">${v}</div>
+      <div class="goal">목표 ${g}</div>
+      <div class="plus">+</div>
+      <div class="minus" onclick="event.stopPropagation();bump('${a.k}',-1)">−</div>
+      <div class="bar" style="width:${pct}%;background:${a.color}"></div>
+    </div>`;
+  }).join('');
+}
+
+/* ============ 오늘 게이지 ============ */
+function renderDay(){
+  const d=getDay(todayKey());
+  let done=0,goal=0;
+  ACTIONS.forEach(a=>{done+=Math.min(d[a.k]||0,DB.dayGoals[a.k]);goal+=DB.dayGoals[a.k];});
+  const pct=goal?Math.round(done/goal*100):0;
+  const C=264, off=C-C*Math.min(pct,100)/100;
+  const ring=document.getElementById('dayRing');
+  ring.style.strokeDashoffset=off;
+  ring.style.stroke=pct>=100?'var(--go)':pct>=60?'var(--fire)':'var(--fire2)';
+  document.getElementById('dayPct').textContent=pct+'%';
+  document.getElementById('dayStat').innerHTML=ACTIONS.map(a=>{
+    const v=d[a.k]||0,g=DB.dayGoals[a.k];
+    return `<div class="row"><span class="k">${a.ic} ${a.lbl}</span>
+      <span class="v" style="color:${v>=g?'var(--go)':'var(--txt)'}">${v}<small> / ${g}</small></span></div>`;
+  }).join('');
+}
+
+/* ============ 월간 진행 ============ */
+function monthSum(){
+  const mk=monthKey(); let s={call:0,visit:0,quote:0,msg:0,sample:0,activedays:0};
+  Object.keys(DB.acts).forEach(d=>{if(d.startsWith(mk)){const a=DB.acts[d];
+    ['call','visit','quote','msg','sample'].forEach(k=>s[k]+=a[k]||0);
+    if(ACTIONS.some(x=>a[x.k]>0))s.activedays++;}});
+  return s;
+}
+function leadStats(){
+  let won=0,wonAmt=0,pipe=0,cnt=0,newCount=0;
+  const mk=monthKey();
+  DB.leads.forEach(l=>{
+    if(l.stage==='won'){won++;wonAmt+=(+l.price||0);if((l.created||'').startsWith(mk))newCount++;}
+    else if(l.stage!=='lost'){pipe+=(+l.price||0);cnt++;}
+  });
+  return {won,wonAmt,pipe,cnt,newCount};
+}
+function renderMonth(){
+  const ls=leadStats();
+  const dayOfMonth=new Date().getDate();
+  const daysInMonth=new Date(new Date().getFullYear(),new Date().getMonth()+1,0).getDate();
+  const left=daysInMonth-dayOfMonth;
+  const bars=[
+    {t:'💰 매출',cur:ls.wonAmt,goal:DB.monthGoals.rev,unit:'만원',c:'var(--go)'},
+    {t:'🤝 신규 거래처',cur:ls.newCount,goal:DB.monthGoals.new,unit:'곳',c:'var(--call)'},
+    {t:'📝 계약 건수',cur:ls.won,goal:DB.monthGoals.deal,unit:'건',c:'var(--gold)'},
+  ];
+  document.getElementById('monthBars').innerHTML=bars.map(b=>{
+    const pct=b.goal?Math.min(100,b.cur/b.goal*100):0;
+    const remain=Math.max(0,b.goal-b.cur);
+    const pace=left>0?(remain/left).toFixed(1):remain;
+    return `<div class="mbar-card">
+      <div class="mbar-head"><span class="t">${b.t}</span>
+        <span class="n">${b.cur.toLocaleString()}<small> / ${b.goal.toLocaleString()} ${b.unit}</small></span></div>
+      <div class="track"><div class="fill" style="width:${pct}%;background:${b.c}"></div></div>
+      <div class="mbar-foot"><span>${Math.round(pct)}% 달성</span>
+        <span class="pace">${remain>0?`남은 ${left}일 · 하루 ${pace} 필요`:'목표 달성! 🎉'}</span></div>
+    </div>`;
+  }).join('');
+}
+
+/* ============ 동기부여 지표 ============ */
+function renderMotiv(){
+  const ms=monthSum(), ls=leadStats();
+  const totalCalls=ms.call;
+  const valPerCall=totalCalls?Math.round(ls.wonAmt/totalCalls):0;
+  const convRate=ms.quote?Math.round(ls.won/ms.quote*100):0;
+  const cards=[
+    {v:DB.streak,l:'연속 달성일 🔥',cls:''},
+    {v:valPerCall.toLocaleString(),l:'전화 1통당 매출(만원)',cls:'up'},
+    {v:ms.call+ms.visit,l:'이번 달 접촉 횟수',cls:''},
+  ];
+  document.getElementById('motivGrid').innerHTML=cards.map(c=>
+    `<div class="stat"><div class="v ${c.cls}">${c.v}</div><div class="l">${c.l}</div></div>`).join('');
+}
+
+/* ============ 코치 인사이트 ============ */
+function renderInsight(){
+  const d=getDay(todayKey()), ms=monthSum(), ls=leadStats();
+  let done=0,goal=0;
+  ACTIONS.forEach(a=>{done+=Math.min(d[a.k]||0,DB.dayGoals[a.k]);goal+=DB.dayGoals[a.k];});
+  const pct=goal?done/goal*100:0;
+  const dueLeads=DB.leads.filter(l=>l.follow&&l.follow<=todayKey()&&l.stage!=='won'&&l.stage!=='lost');
+  let msgs=[];
+  if(dueLeads.length) msgs.push({em:'⏰',t:`<b>${dueLeads[0].name}</b> 연락할 차례예요. 오늘 전화 한 통이면 계약이 가까워집니다.`});
+  if(pct>=100) msgs.push({em:'🏆',t:`오늘 목표 <b>완료</b>! 연속 ${DB.streak}일째 달리는 중. 내일도 이 기세로.`});
+  else if(pct>=50) msgs.push({em:'💪',t:`오늘 <b>${Math.round(pct)}%</b> 왔어요. 전화 ${Math.max(0,DB.dayGoals.call-(d.call||0))}통만 더 하면 목표 채웁니다.`});
+  else msgs.push({em:'🚀',t:`아직 출발 전이에요. 일단 <b>전화 한 통</b>부터. 카운터 탭만 하면 됩니다.`});
+  if(ls.pipe>0) msgs.push({em:'📊',t:`협상중인 예상 매출이 <b>${ls.pipe.toLocaleString()}만원</b>. 팔로업 한 번이 돈입니다.`});
+  document.getElementById('insightBox').innerHTML=msgs.slice(0,2).map(m=>
+    `<div class="insight"><span class="em">${m.em}</span><div class="it">${m.t}</div></div>`).join('');
+}
+
+/* ============ 파이프라인 ============ */
+function renderPipe(){
+  const ls=leadStats();
+  document.getElementById('pipeTotal').textContent=ls.pipe.toLocaleString();
+  document.getElementById('pipeWon').textContent=ls.wonAmt.toLocaleString();
+  document.getElementById('pipeCount').textContent=ls.cnt;
+  const body=document.getElementById('pipeBody');
+  const activeStages=STAGES.filter(s=>s.k!=='lost');
+  let html=activeStages.map(st=>{
+    const items=DB.leads.filter(l=>l.stage===st.k);
+    const sum=items.reduce((a,l)=>a+(+l.price||0),0);
+    if(items.length===0&&st.k==='lead') {} 
+    return `<div class="pipe-stage">
+      <div class="pipe-head"><span class="sn"><span class="dot" style="background:${st.c}"></span>${st.n}</span>
+        <span class="sum">${items.length}건 · ${sum.toLocaleString()}만원</span></div>
+      ${items.length?items.map(l=>leadCard(l)).join(''):'<div style="font-size:12px;color:var(--txt3);padding:4px 4px 8px">없음</div>'}
+    </div>`;
+  }).join('');
+  const lost=DB.leads.filter(l=>l.stage==='lost');
+  if(lost.length) html+=`<div class="pipe-stage"><div class="pipe-head">
+    <span class="sn"><span class="dot" style="background:#ff6b7a"></span>실패</span>
+    <span class="sum">${lost.length}건</span></div>${lost.map(l=>leadCard(l)).join('')}</div>`;
+  if(DB.leads.length===0) html=`<div class="empty"><div class="e">📋</div>
+    <p>아직 거래처가 없어요.<br>우측 하단 <b>+</b> 버튼으로 추가하세요.</p></div>`;
+  body.innerHTML=html;
+}
+function leadCard(l){
+  const prodTags=(l.prods||[]).map(p=>`<span class="prod-tag">${p}</span>`).join('');
+  const due=l.follow&&l.follow<=todayKey();
+  const fol=l.follow?`<div class="lfollow ${due?'due':''}">📅 ${due?'연락 예정일 지남':l.follow}</div>`:'';
+  return `<div class="lead" onclick="openLead('${l.id}')">
+    <div class="ln"><span>${l.name}</span><span class="lp">${(+l.price||0).toLocaleString()}만</span></div>
+    ${l.memo?`<div class="lm">${l.memo}</div>`:''}
+    <div>${prodTags}</div>${fol}</div>`;
+}
+
+/* ============ 거래처 모달 ============ */
+let editId=null,selStage='lead',selProds=[];
+function openLead(id){
+  editId=id||null;
+  document.getElementById('leadTitle').textContent=id?'거래처 수정':'거래처 추가';
+  document.getElementById('delLeadBtn').style.display=id?'block':'none';
+  let l=id?DB.leads.find(x=>x.id===id):{name:'',price:'',stage:'lead',prods:[],follow:'',memo:''};
+  document.getElementById('l_name').value=l.name||'';
+  document.getElementById('l_price').value=l.price||'';
+  document.getElementById('l_follow').value=l.follow||'';
+  document.getElementById('l_memo').value=l.memo||'';
+  selStage=l.stage||'lead'; selProds=[...(l.prods||[])];
+  document.getElementById('stageChips').innerHTML=STAGES.map(s=>
+    `<div class="chip stage ${selStage===s.k?'on':''}" onclick="pickStage('${s.k}',this)">${s.n}</div>`).join('');
+  document.getElementById('prodChips').innerHTML=PRODUCTS.map(p=>
+    `<div class="chip ${selProds.includes(p)?'on':''}" onclick="pickProd('${p}',this)">${p}</div>`).join('');
+  document.getElementById('leadModal').classList.add('on');
+}
+function pickStage(k,el){selStage=k;document.querySelectorAll('#stageChips .chip').forEach(c=>c.classList.remove('on'));el.classList.add('on');}
+function pickProd(p,el){if(selProds.includes(p)){selProds=selProds.filter(x=>x!==p);el.classList.remove('on');}else{selProds.push(p);el.classList.add('on');}}
+function closeLead(){document.getElementById('leadModal').classList.remove('on');}
+function saveLead(){
+  const name=document.getElementById('l_name').value.trim();
+  if(!name){toast('거래처명을 입력하세요');return;}
+  const data={name,price:+document.getElementById('l_price').value||0,stage:selStage,
+    prods:selProds,follow:document.getElementById('l_follow').value,
+    memo:document.getElementById('l_memo').value.trim()};
+  if(editId){Object.assign(DB.leads.find(x=>x.id===editId),data);}
+  else{data.id='L'+Date.now();data.created=todayKey();DB.leads.push(data);}
+  save();closeLead();render();toast('저장됐어요 ✅');
+}
+function deleteLead(){if(confirm('삭제할까요?')){DB.leads=DB.leads.filter(x=>x.id!==editId);save();closeLead();render();}}
+
+/* ============ 통계 페이지 ============ */
+function renderStat(){
+  const ms=monthSum(), ls=leadStats();
+  const conv=[
+    {v:ms.quote?Math.round(ls.won/ms.quote*100):0,l:'견적→계약 전환율',suf:'%'},
+    {v:ms.call?Math.round(ls.wonAmt/ms.call):0,l:'전화 1통당 매출(만원)',suf:''},
+    {v:ls.won?Math.round(ls.wonAmt/ls.won):0,l:'계약 평균 단가(만원)',suf:''},
+  ];
+  document.getElementById('convGrid').innerHTML=conv.map(c=>
+    `<div class="stat"><div class="v up">${c.v}${c.suf}</div><div class="l">${c.l}</div></div>`).join('');
+  // 이번달 vs 지난달
+  const lastMk=(()=>{const d=new Date();d.setMonth(d.getMonth()-1);return d.toLocaleDateString('sv').slice(0,7);})();
+  function sumMonth(mk){let s={call:0,visit:0,quote:0};Object.keys(DB.acts).forEach(d=>{if(d.startsWith(mk)){['call','visit','quote'].forEach(k=>s[k]+=DB.acts[d][k]||0);}});return s;}
+  const cur=sumMonth(monthKey()),prev=sumMonth(lastMk);
+  const comp=[['☎️ 전화','call'],['🚗 방문','visit'],['📋 견적','quote']];
+  document.getElementById('compareBox').innerHTML='<div class="gcard">'+comp.map(([lbl,k])=>{
+    const c=cur[k],p=prev[k],max=Math.max(c,p,1);
+    const diff=c-p, up=diff>=0;
+    return `<div style="margin-bottom:14px">
+      <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:700;margin-bottom:6px">
+        <span style="color:var(--txt2)">${lbl}</span>
+        <span style="color:${up?'var(--go)':'var(--fire)'}">${up?'▲':'▼'} ${Math.abs(diff)}</span></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <span style="font-size:11px;color:var(--txt3);width:38px">이번달</span>
+        <div class="track" style="flex:1"><div class="fill" style="width:${c/max*100}%;background:var(--fire2)"></div></div>
+        <span style="font-size:13px;font-weight:800;width:34px;text-align:right">${c}</span></div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:11px;color:var(--txt3);width:38px">지난달</span>
+        <div class="track" style="flex:1"><div class="fill" style="width:${p/max*100}%;background:var(--txt3)"></div></div>
+        <span style="font-size:13px;font-weight:800;width:34px;text-align:right;color:var(--txt2)">${p}</span></div>
+    </div>`;
+  }).join('')+'</div>';
+  // 7일 차트
+  const days=[];for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);days.push(d.toLocaleDateString('sv'));}
+  const maxV=Math.max(...days.map(d=>{const a=DB.acts[d];return a?(a.call+a.visit+a.quote+a.msg+a.sample):0;}),1);
+  document.getElementById('weekChart').innerHTML='<div style="display:flex;align-items:flex-end;gap:6px;height:120px">'+
+    days.map(d=>{const a=DB.acts[d];const tot=a?(a.call+a.visit+a.quote+a.msg+a.sample):0;
+      const h=tot/maxV*100;const dn=new Date(d).getDate();const isToday=d===todayKey();
+      return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;height:100%;justify-content:flex-end">
+        <span style="font-size:10px;font-weight:800;color:${isToday?'var(--fire2)':'var(--txt3)'}">${tot||''}</span>
+        <div style="width:100%;height:${Math.max(h,3)}%;border-radius:5px 5px 0 0;
+          background:${isToday?'linear-gradient(var(--fire),var(--fire2))':'var(--surface2)'}"></div>
+        <span style="font-size:10px;color:var(--txt3)">${dn}</span></div>`;}).join('')+'</div>';
+}
+
+/* ============ 설정 ============ */
+function renderSettings(){
+  document.getElementById('dayGoalForm').innerHTML=ACTIONS.map(a=>
+    `<div class="grow"><span class="gl">${a.ic} ${a.lbl}</span>
+     <input type="number" inputmode="numeric" value="${DB.dayGoals[a.k]}" onchange="DB.dayGoals['${a.k}']=+this.value||0"></div>`).join('');
+  document.getElementById('mg_rev').value=DB.monthGoals.rev;
+  document.getElementById('mg_new').value=DB.monthGoals.new;
+  document.getElementById('mg_deal').value=DB.monthGoals.deal;
+}
+function saveGoals(){
+  DB.monthGoals.rev=+document.getElementById('mg_rev').value||0;
+  DB.monthGoals.new=+document.getElementById('mg_new').value||0;
+  DB.monthGoals.deal=+document.getElementById('mg_deal').value||0;
+  save();render();toast('목표 저장 ✅');
+}
+function resetToday(){if(confirm('오늘 활동 카운트를 0으로?')){DB.acts[todayKey()]={call:0,visit:0,quote:0,msg:0,sample:0,rev:0};save();render();}}
+function exportData(){
+  const blob=new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='영업데이터_'+todayKey()+'.json';a.click();
+}
+function importData(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{try{DB=JSON.parse(r.result);save();render();toast('불러왔어요 ✅');}catch{toast('파일 오류');}};r.readAsText(f);}
+
+/* ============ 스트릭 ============ */
+function checkStreak(){
+  const t=todayKey();
+  if(DB.lastDay===t)return;
+  const d=getDay(t);let done=0,goal=0;
+  ACTIONS.forEach(a=>{done+=Math.min(d[a.k]||0,DB.dayGoals[a.k]);goal+=DB.dayGoals[a.k];});
+  // 어제 달성 여부로 연속 유지 판단은 단순화: 오늘 100% 찍으면 streak++ (하루 1회)
+}
+function maybeStreak(){
+  const t=todayKey();const d=getDay(t);let done=0,goal=0;
+  ACTIONS.forEach(a=>{done+=Math.min(d[a.k]||0,DB.dayGoals[a.k]);goal+=DB.dayGoals[a.k];});
+  if(goal&&done>=goal&&DB.lastDay!==t){
+    const y=new Date();y.setDate(y.getDate()-1);const yk=y.toLocaleDateString('sv');
+    DB.streak=(DB.lastDay===yk||DB.streak===0)?DB.streak+1:1;
+    DB.lastDay=t;save();toast('🔥 오늘 목표 달성! 연속 '+DB.streak+'일');
+  }
+}
+
+/* ============ 렌더 ============ */
+function render(){
+  renderCounters();renderDay();renderMonth();renderMotiv();renderInsight();
+  renderPipe();renderStat();renderSettings();
+  document.getElementById('streakNum').textContent=DB.streak;
+  maybeStreak();
+}
+document.getElementById('todayLbl').textContent=
+  new Date().toLocaleDateString('ko-KR',{month:'long',day:'numeric',weekday:'long'});
+
+/* 탭 전환 */
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('on'));
+  t.classList.add('on');
+  document.getElementById('page-'+t.dataset.p).classList.add('on');
+  document.getElementById('fab').style.display=t.dataset.p==='pipe'?'flex':'none';
+  window.scrollTo(0,0);
+});
+document.getElementById('fab').style.display='none';
+document.querySelector('.tab[data-p="pipe"]').addEventListener('click',()=>{});
+
+let toastT;function toast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),1800);}
+
+render();
+</script>
+</body>
+</html>
